@@ -1,8 +1,8 @@
 import "server-only";
 import { db } from "./db";
 
-export type Stage = "find_email" | "research" | "draft" | "push_gmail";
-export const ALL_STAGES: Stage[] = ["find_email", "research", "draft", "push_gmail"];
+export type Stage = "find_email" | "draft" | "push_gmail";
+export const ALL_STAGES: Stage[] = ["find_email", "draft", "push_gmail"];
 export const MAX_ATTEMPTS = 4;
 
 export type Job = {

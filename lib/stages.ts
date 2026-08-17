@@ -2,9 +2,8 @@ import "server-only";
 import { db, type Org } from "./db";
 import { enqueue, type Job, type Stage } from "./queue";
 import { findEmail } from "./find-email";
-import { research } from "./research";
 import { createDraft } from "./gmail";
-import { hasUnfilled } from "./template";
+import { hasUnfilled, coldEmail } from "./template";
 
 async function runFindEmail(org: Org, job: Job) {
   if (!org.website) {
@@ -30,54 +29,13 @@ async function runFindEmail(org: Org, job: Job) {
     consent_basis: "conspicuously_published",
     status: "email_found",
   }).eq("id", org.id);
-  await enqueue(org.id, "research");
-}
-
-async function runResearch(org: Org) {
-  const { result, sources } = await research(org);
-
-  // §13: an empty hook means nothing specific enough was found. A generic
-  // email to a school is worse than no email — do not draft one.
-  if (!result.hook) {
-    await db.from("orgs").update({
-      status: "needs_manual",
-      notes: "LLM found nothing specific enough for a hook",
-      last_researched: new Date().toISOString(),
-    }).eq("id", org.id);
-    return;
-  }
-
-  for (const s of sources) {
-    await db.from("sources").insert({
-      id: `src-${org.id}-${Buffer.from(s.url).toString("base64url").slice(0, 24)}`,
-      org_id: org.id,
-      url: s.url,
-      title: s.title,
-      excerpt: s.excerpt.slice(0, 3600),
-    });
-  }
-
-  await db.from("orgs").update({
-    research_summary: result.summary,
-    research_hook: result.hook,
-    status: "researched",
-    last_researched: new Date().toISOString(),
-  }).eq("id", org.id);
-
-  await db.from("drafts").upsert({
-    id: `draft-${org.id}`,
-    org_id: org.id,
-    subject: result.subject,
-    body: result.body,
-    is_fallback: false,
-    model: process.env.NVIDIA_MODEL ?? "",
-  });
-
-  await enqueue(org.id, "draft");
+  // Same priority as this job, so a school stays ahead of the backlog for
+  // its whole pipeline instead of falling back to the default queue.
+  await enqueue(org.id, "draft", job.priority);
 }
 
 /** Three hard guards live here — see BUILD.md §7. */
-async function runDraft(org: Org) {
+async function runDraft(org: Org, job: Job) {
   // Guard 1: FILL_ME. Prevents mailing schools a letter full of placeholders.
   const unfilled = hasUnfilled();
   if (unfilled.length > 0) {
@@ -93,8 +51,12 @@ async function runDraft(org: Org) {
     }
   }
 
+  // Cold email, no research: same content for every school, no LLM/scrape.
+  const { subject, body } = coldEmail(org.name);
+  await db.from("drafts").upsert({ id: `draft-${org.id}`, org_id: org.id, subject, body, is_fallback: false, model: "template" });
+
   await db.from("orgs").update({ status: "drafted", drafted_at: new Date().toISOString() }).eq("id", org.id);
-  await enqueue(org.id, "push_gmail");
+  await enqueue(org.id, "push_gmail", job.priority);
 }
 
 async function runPushGmail(org: Org) {
@@ -121,8 +83,7 @@ async function runPushGmail(org: Org) {
 
 export const STAGES: Record<Stage, (org: Org, job?: Job) => Promise<void>> = {
   find_email: (org, job) => runFindEmail(org, job!),
-  research: (org) => runResearch(org),
-  draft: (org) => runDraft(org),
+  draft: (org, job) => runDraft(org, job!),
   push_gmail: (org) => runPushGmail(org),
 };
 
@@ -134,6 +95,7 @@ export const STAGES: Record<Stage, (org: Org, job?: Job) => Promise<void>> = {
  */
 const TERMINAL_MARKERS = [
   "AUTH_EXPIRED",
+  "AUTH_MISSING",
   "insufficientPermissions",
   "TEMPLATE_INCOMPLETE",
   "FALLBACK_DRAFT_BLOCKED",

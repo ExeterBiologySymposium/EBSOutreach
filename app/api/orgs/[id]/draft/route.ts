@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 /**
  * POST { subject?, body?, action?: "push" | "regenerate" }
  * - subject/body present -> hand-edit the existing draft in place.
- * - action "regenerate" -> re-run research+draft from scratch (queued, async).
+ * - action "regenerate" -> re-run draft from scratch (queued, async).
  * - action "push" (default) -> push the current draft to Gmail immediately.
  */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -28,8 +28,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   if (action === "regenerate") {
-    await enqueue(id, "research", 10);
-    return Response.json({ queued: "research" });
+    await enqueue(id, "draft", 10);
+    return Response.json({ queued: "draft" });
   }
 
   try {

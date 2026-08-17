@@ -50,9 +50,9 @@ test(
 
     try {
       const [a, b, c] = await Promise.all([
-        claimJobs(10, ["find_email", "research", "draft", "push_gmail"]),
-        claimJobs(10, ["find_email", "research", "draft", "push_gmail"]),
-        claimJobs(10, ["find_email", "research", "draft", "push_gmail"]),
+        claimJobs(10, ["find_email", "draft", "push_gmail"]),
+        claimJobs(10, ["find_email", "draft", "push_gmail"]),
+        claimJobs(10, ["find_email", "draft", "push_gmail"]),
       ]);
       const claimedIds = [...a, ...b, ...c].map((j: any) => j.id);
       assert.equal(claimedIds.length, 30);
