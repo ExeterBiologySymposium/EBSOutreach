@@ -1,0 +1,184 @@
+:root {
+  --col-bg: #0f1115;
+  --col-panel: #171a21;
+  --col-border: #2a2e38;
+  --col-text: #e6e8ec;
+  --col-text-muted: #8b909c;
+  --col-primary: #4f8cff;
+  --col-danger: #ff6b6b;
+  --col-warn: #e6b34d;
+  --col-ok: #4fd18b;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 16px;
+  --sp-4: 24px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--col-bg);
+  color: var(--col-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+
+a {
+  color: var(--col-primary);
+}
+
+button {
+  font: inherit;
+  background: var(--col-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+}
+
+button.secondary {
+  background: transparent;
+  border: 1px solid var(--col-border);
+  color: var(--col-text);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  background: var(--col-bg);
+  color: var(--col-text);
+  border: 1px solid var(--col-border);
+  border-radius: 6px;
+  padding: var(--sp-2);
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 320px 1fr 1fr;
+  height: 100vh;
+}
+
+.pane {
+  border-right: 1px solid var(--col-border);
+  overflow-y: auto;
+  padding: var(--sp-3);
+}
+
+.pane:last-child {
+  border-right: none;
+}
+
+.queue-item {
+  padding: var(--sp-2);
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: var(--sp-1);
+}
+
+.queue-item:hover {
+  background: var(--col-panel);
+}
+
+.queue-item.active {
+  background: var(--col-panel);
+  border: 1px solid var(--col-primary);
+}
+
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--col-panel);
+  color: var(--col-text-muted);
+  text-transform: uppercase;
+}
+
+.badge.status-needs_manual {
+  background: var(--col-warn);
+  color: #1a1a1a;
+}
+
+.badge.status-failed {
+  background: var(--col-danger);
+  color: #1a1a1a;
+}
+
+.badge.status-draft_in_gmail,
+.badge.status-sent {
+  background: var(--col-ok);
+  color: #1a1a1a;
+}
+
+.field {
+  margin-bottom: var(--sp-3);
+}
+
+.field label {
+  display: block;
+  color: var(--col-text-muted);
+  margin-bottom: var(--sp-1);
+  font-size: 12px;
+}
+
+.field textarea,
+.field input {
+  width: 100%;
+}
+
+.funnel {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-4);
+}
+
+.funnel-stat {
+  background: var(--col-panel);
+  border: 1px solid var(--col-border);
+  border-radius: 8px;
+  padding: var(--sp-3);
+  min-width: 140px;
+}
+
+.funnel-stat .count {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.funnel-stat .label {
+  color: var(--col-text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: var(--sp-2);
+  border-bottom: 1px solid var(--col-border);
+}
+
+.error-text {
+  color: var(--col-danger);
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
