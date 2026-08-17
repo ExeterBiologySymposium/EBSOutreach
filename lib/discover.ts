@@ -1,4 +1,4 @@
-import { classify, classifyPss } from "./grade-span.ts";
+import { classify, classifyPss } from "./grade-span";
 
 /** Deterministic slug used as orgs.normalized_key so re-seeding is safe (upsert on conflict). */
 export function slug(name: string, state: string, city: string): string {

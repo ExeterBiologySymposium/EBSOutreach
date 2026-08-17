@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "test": "node --test --experimental-strip-types tests/*.test.ts",
-    "seed": "node --experimental-strip-types scripts/seed-nces.mjs",
+    "seed": "node --experimental-strip-types --import ./scripts/register-ts-resolver.mjs scripts/seed-nces.mjs",
     "gmail-authorize": "node scripts/gmail-authorize.mjs"
   },
   "dependencies": {
