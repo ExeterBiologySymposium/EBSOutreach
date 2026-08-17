@@ -62,6 +62,12 @@ export async function research(
 
   const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
     method: "POST",
+    // meta/llama-3.1-8b-instruct — plain instruct model, not a reasoner
+    // (reasoning_content comes back null). Verified against the real prompt:
+    // ~4s, ~400 completion tokens. NVIDIA reasoning models (tried
+    // nemotron-3.5-lightning) burn thousands of tokens on hidden
+    // chain-of-thought before content ever holds real JSON — avoid those
+    // here, a 60s serverless function can't absorb that latency.
     signal: AbortSignal.timeout(25_000),
     headers: {
       Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`,
@@ -70,7 +76,7 @@ export async function research(
     body: JSON.stringify({
       model: process.env.NVIDIA_MODEL,
       temperature: 0.2,
-      max_tokens: 650,
+      max_tokens: 2000,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
