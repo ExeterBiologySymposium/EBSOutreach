@@ -94,16 +94,27 @@ function* parseCsv(text) {
 }
 
 async function upsertOrgs(orgRows) {
+  // normalized_key is the upsert conflict target, so two rows sharing a key
+  // (distinct NCES ids, same slug(name, state, city)) collide no matter which
+  // chunk they land in — Postgres just throws if both land in the *same*
+  // chunk instead of silently overwriting across chunks. Dedupe once,
+  // keeping the last occurrence (same result a sequential run would give).
+  const byKey = new Map(orgRows.map((r) => [r.normalized_key, r]));
+  const deduped = [...byKey.values()];
+  if (deduped.length < orgRows.length) {
+    console.log(`  ${orgRows.length - deduped.length} rows share a normalized_key with another row — keeping last, dropping rest`);
+  }
+
   let inserted = 0;
-  for (let i = 0; i < orgRows.length; i += CHUNK_SIZE) {
-    const chunk = orgRows.slice(i, i + CHUNK_SIZE);
+  for (let i = 0; i < deduped.length; i += CHUNK_SIZE) {
+    const chunk = deduped.slice(i, i + CHUNK_SIZE);
     const { error } = await db.from("orgs").upsert(chunk, { onConflict: "normalized_key" });
     if (error) {
       console.error(`  chunk ${i}-${i + chunk.length} failed: ${error.message}`);
       continue;
     }
     inserted += chunk.length;
-    process.stdout.write(`\r  upserted ${inserted}/${orgRows.length}`);
+    process.stdout.write(`\r  upserted ${inserted}/${deduped.length}`);
   }
   console.log();
   return inserted;
