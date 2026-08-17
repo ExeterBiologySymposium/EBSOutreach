@@ -1,0 +1,26 @@
+name: Tick queue
+
+# Hobby-plan fallback for */5 cron — Vercel's own cron feature restricts
+# Hobby projects to once/day (BUILD.md §11 step 6, README.md "What the
+# operator still has to do"). This hits the same /api/cron/tick route
+# instead. Use this OR vercel.json's crons, never both — running both
+# double-ticks the queue.
+#
+# Needs two repo secrets (Settings -> Secrets and variables -> Actions):
+#   APP_URL      e.g. https://your-app.vercel.app
+#   CRON_SECRET  same value as the Vercel project's CRON_SECRET env var
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/tick
+        run: |
+          curl --fail-with-body -sS -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/tick"
