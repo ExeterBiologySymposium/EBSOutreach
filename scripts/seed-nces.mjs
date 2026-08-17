@@ -113,6 +113,17 @@ async function upsertOrgs(orgRows) {
       console.error(`  chunk ${i}-${i + chunk.length} failed: ${error.message}`);
       continue;
     }
+
+    // Every org needs a find_email job to enter the pipeline at all — each
+    // stage only enqueues the *next* one (lib/stages.ts), nothing enqueues
+    // the first. id matches enqueue()'s scheme (lib/queue.ts) so this stays
+    // idempotent across re-seeds.
+    const { error: jobError } = await db.from("jobs").upsert(
+      chunk.map((org) => ({ id: `find_email-${org.id}`, org_id: org.id, stage: "find_email" })),
+      { onConflict: "id", ignoreDuplicates: true },
+    );
+    if (jobError) console.error(`  find_email jobs for chunk ${i}-${i + chunk.length} failed: ${jobError.message}`);
+
     inserted += chunk.length;
     process.stdout.write(`\r  upserted ${inserted}/${deduped.length}`);
   }
